@@ -12,7 +12,7 @@ app = FastAPI(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.get("/ui")
+@app.get("/")
 async def read_index():
     return FileResponse('static/index.html')
 
