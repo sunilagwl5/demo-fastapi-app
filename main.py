@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 app = FastAPI(
     title="Demo FastAPI App",
@@ -8,7 +10,13 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 @app.get("/")
+async def read_index():
+    return FileResponse('static/index.html')
+
+@app.get("/api")
 async def read_root():
     return {"message": "Hello, FastAPI!"}
 
