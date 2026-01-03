@@ -1,6 +1,12 @@
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(
+    title="Demo FastAPI App",
+    description="API documentation (Swagger UI) for the demo FastAPI service. Includes root and health endpoints.",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
 
 @app.get("/")
 async def read_root():
