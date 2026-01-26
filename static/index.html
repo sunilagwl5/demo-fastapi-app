@@ -3,14 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo FastAPI App</title>
+    <title>FastAPI Item Manager</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Demo FastAPI App</h1>
-        <button id="fetch-btn">Fetch Message</button>
-        <div id="message-container"></div>
+        <h1>Item Manager</h1>
+        
+        <div class="card input-section">
+            <h2>Add New Item</h2>
+            <div class="form-group">
+                <input type="text" id="item-name" placeholder="Item Name" required>
+                <input type="text" id="item-desc" placeholder="Description (optional)">
+                <button id="add-btn">Add Item</button>
+            </div>
+        </div>
+
+        <div class="card list-section">
+            <h2>Current Items</h2>
+            <ul id="item-list">
+                <!-- Items will be populated here -->
+            </ul>
+        </div>
     </div>
     <script src="/static/script.js"></script>
 </body>
