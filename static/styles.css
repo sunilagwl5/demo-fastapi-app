@@ -121,5 +121,29 @@ li:hover {
 }
 
 .delete-btn:hover {
+
     background-color: #c0392b;
+
+}
+
+
+
+.update-btn {
+
+    background-color: #3498db;
+
+    padding: 0.5rem 1rem;
+
+    font-size: 0.9rem;
+
+    margin-left: 1rem;
+
+}
+
+
+
+.update-btn:hover {
+
+    background-color: #2980b9;
+
 }

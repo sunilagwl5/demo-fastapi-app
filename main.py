@@ -48,6 +48,15 @@ async def create_item(item: Item):
     items.append(item)
     return item
 
+@app.put("/items/{item_id}", response_model=Item)
+async def update_item(item_id: int, item: Item):
+    for i, existing_item in enumerate(items):
+        if existing_item.id == item_id:
+            item.id = item_id
+            items[i] = item
+            return item
+    raise HTTPException(status_code=404, detail="Item not found")
+
 @app.delete("/items/{item_id}")
 async def delete_item(item_id: int):
     global items

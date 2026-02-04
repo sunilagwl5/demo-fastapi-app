@@ -35,66 +35,198 @@ function renderList(items) {
         contentDiv.appendChild(nameSpan);
         contentDiv.appendChild(descSpan);
         
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.onclick = () => deleteItem(item.id);
+                const deleteBtn = document.createElement('button');
         
-        li.appendChild(contentDiv);
-        li.appendChild(deleteBtn);
-        itemList.appendChild(li);
-    });
-}
-
-async function addItem() {
-    const name = nameInput.value.trim();
-    const description = descInput.value.trim();
-
-    if (!name) {
-        alert('Please enter an item name.');
-        return;
-    }
-
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, description })
-        });
-
-        if (response.ok) {
-            nameInput.value = '';
-            descInput.value = '';
-            fetchItems(); // Refresh list
-        } else {
-            console.error('Failed to add item');
+                deleteBtn.className = 'delete-btn';
+        
+                deleteBtn.textContent = 'Delete';
+        
+                deleteBtn.onclick = () => deleteItem(item.id);
+        
+        
+        
+                const updateBtn = document.createElement('button');
+        
+                updateBtn.className = 'update-btn';
+        
+                updateBtn.textContent = 'Update';
+        
+                updateBtn.onclick = () => updateItem(item.id, item.name, item.description);
+        
+        
+        
+                li.appendChild(contentDiv);
+        
+                li.appendChild(updateBtn);
+        
+                li.appendChild(deleteBtn);
+        
+                itemList.appendChild(li);
+        
+            });
+        
         }
-    } catch (error) {
-        console.error('Error adding item:', error);
-    }
-}
-
-async function deleteItem(id) {
-    if (!confirm('Are you sure you want to delete this item?')) return;
-
-    try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE'
-        });
-
-        if (response.ok) {
-            fetchItems(); // Refresh list
-        } else {
-            console.error('Failed to delete item');
+        
+        
+        
+        async function addItem() {
+        
+            const name = nameInput.value.trim();
+        
+            const description = descInput.value.trim();
+        
+        
+        
+            if (!name) {
+        
+                alert('Please enter an item name.');
+        
+                return;
+        
+            }
+        
+        
+        
+            try {
+        
+                const response = await fetch(API_URL, {
+        
+                    method: 'POST',
+        
+                    headers: {
+        
+                        'Content-Type': 'application/json'
+        
+                    },
+        
+                    body: JSON.stringify({ name, description })
+        
+                });
+        
+        
+        
+                if (response.ok) {
+        
+                    nameInput.value = '';
+        
+                    descInput.value = '';
+        
+                    fetchItems(); // Refresh list
+        
+                } else {
+        
+                    console.error('Failed to add item');
+        
+                }
+        
+            } catch (error) {
+        
+                console.error('Error adding item:', error);
+        
+            }
+        
         }
-    } catch (error) {
-        console.error('Error deleting item:', error);
-    }
-}
-
-addBtn.addEventListener('click', addItem);
-
-// Initial fetch
-fetchItems();
+        
+        
+        
+        async function deleteItem(id) {
+        
+            if (!confirm('Are you sure you want to delete this item?')) return;
+        
+        
+        
+            try {
+        
+                const response = await fetch(`${API_URL}/${id}`, {
+        
+                    method: 'DELETE'
+        
+                });
+        
+        
+        
+                if (response.ok) {
+        
+                    fetchItems(); // Refresh list
+        
+                } else {
+        
+                    console.error('Failed to delete item');
+        
+                }
+        
+            } catch (error) {
+        
+                console.error('Error deleting item:', error);
+        
+            }
+        
+        }
+        
+        
+        
+        async function updateItem(id, currentName, currentDescription) {
+        
+            const name = prompt('Enter new name:', currentName);
+        
+            const description = prompt('Enter new description:', currentDescription);
+        
+        
+        
+            if (!name) {
+        
+                alert('Please enter an item name.');
+        
+                return;
+        
+            }
+        
+        
+        
+            try {
+        
+                const response = await fetch(`${API_URL}/${id}`, {
+        
+                    method: 'PUT',
+        
+                    headers: {
+        
+                        'Content-Type': 'application/json'
+        
+                    },
+        
+                    body: JSON.stringify({ name, description })
+        
+                });
+        
+        
+        
+                if (response.ok) {
+        
+                    fetchItems(); // Refresh list
+        
+                } else {
+        
+                    console.error('Failed to update item');
+        
+                }
+        
+            } catch (error) {
+        
+                console.error('Error updating item:', error);
+        
+            }
+        
+        }
+        
+        
+        
+        addBtn.addEventListener('click', addItem);
+        
+        
+        
+        // Initial fetch
+        
+        fetchItems();
+        
+        
