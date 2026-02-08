@@ -72,7 +72,7 @@ async def read_index():
 
 @app.get("/api")
 async def read_root():
-    return {"message": "Hello, FastAPI!"}
+    return {"message": "Hello Perfectus Redis"}
 
 # -- Cache Endpoints --
 
