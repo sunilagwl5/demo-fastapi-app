@@ -1,4 +1,5 @@
 import os
+import json
 import redis
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -62,10 +63,6 @@ class Item(BaseModel):
     name: str
     description: Optional[str] = None
 
-# -- In-memory Database --
-items: List[Item] = []
-current_id = 0
-
 @app.get("/")
 async def read_index():
     return FileResponse('static/index.html')
@@ -95,21 +92,44 @@ async def test_cache():
 
 @app.get("/items", response_model=List[Item])
 async def get_items():
-    return items
+    client = get_redis_client()
+    if not client:
+        raise HTTPException(status_code=500, detail="Redis unavailable")
+    
+    try:
+        raw_items = client.hvals("items")
+        return [Item(**json.loads(i)) for i in raw_items]
+    except Exception as e:
+        print(f"Failed to fetch items: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/items", response_model=Item)
 async def create_item(item: Item):
-    global current_id
-    current_id += 1
-    item.id = current_id
-    items.append(item)
-    return item
+    client = get_redis_client()
+    if not client:
+        raise HTTPException(status_code=500, detail="Redis unavailable")
+
+    try:
+        new_id = client.incr("item:id_counter")
+        item.id = new_id
+        client.hset("items", new_id, item.json())
+        return item
+    except Exception as e:
+        print(f"Failed to create item: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/items/{item_id}")
 async def delete_item(item_id: int):
-    global items
-    items = [item for item in items if item.id != item_id]
-    return {"status": "deleted", "id": item_id}
+    client = get_redis_client()
+    if not client:
+        raise HTTPException(status_code=500, detail="Redis unavailable")
+
+    try:
+        client.hdel("items", item_id)
+        return {"status": "deleted", "id": item_id}
+    except Exception as e:
+        print(f"Failed to delete item: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Health check endpoint for loadbalancer
 @app.get("/health")
