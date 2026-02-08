@@ -1,20 +1,60 @@
 import os
+import redis
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional
+import google.auth
+from google.auth.transport.requests import Request
+import traceback
 
 app = FastAPI(
     title="Demo FastAPI App",
-    description="API documentation (Swagger UI) for the demo FastAPI service. Includes root and health endpoints.",
-    version="1.0.0",
+    description="API documentation (Swagger UI) for the demo FastAPI service. Includes cache test.",
+    version="1.1.2",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# -- Redis Configuration --
+REDIS_HOST = os.environ.get("REDIS_HOST", "10.128.0.100")
+REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
+
+def get_redis_client():
+    try:
+        print(f"Initializing Redis (non-cluster) client for {REDIS_HOST}:{REDIS_PORT}")
+        # Fetch IAM token for authentication
+        credentials, project = google.auth.default(
+            scopes=['https://www.googleapis.com/auth/cloud-platform']
+        )
+        credentials.refresh(Request())
+        token = credentials.token
+        print("Successfully retrieved IAM token")
+        
+        # Using standard Redis client (Valkey compatible)
+        client = redis.Redis(
+            host=REDIS_HOST, 
+            port=REDIS_PORT, 
+            password=token,
+            decode_responses=True,
+            ssl=False
+        )
+        # Force a connection test
+        print("Testing connection with PING...")
+        if client.ping():
+            print("PONG!")
+            return client
+        else:
+            print("PING failed")
+            return None
+    except Exception as e:
+        print(f"Failed to create Redis client: {e}")
+        traceback.print_exc()
+        return None
 
 # -- Models --
 class Item(BaseModel):
@@ -33,6 +73,23 @@ async def read_index():
 @app.get("/api")
 async def read_root():
     return {"message": "Hello, FastAPI!"}
+
+# -- Cache Endpoints --
+
+@app.get("/cache/test")
+async def test_cache():
+    client = get_redis_client()
+    if not client:
+        raise HTTPException(status_code=500, detail="Could not initialize Redis client. Check logs for traceback.")
+    
+    try:
+        client.set("test_key", "Hello from Memorystore Valkey!", ex=60)
+        val = client.get("test_key")
+        return {"status": "success", "value": val}
+    except Exception as e:
+        print(f"Cache operation failed: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Cache error: {str(e)}")
 
 # -- Item Endpoints --
 
