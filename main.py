@@ -32,7 +32,7 @@ async def read_index():
 
 @app.get("/api")
 async def read_root():
-    return {"message": "Welcome vibedoctor !"}
+    return {"message": "Hello vibedoctor !"}
 
 # -- Item Endpoints --
 

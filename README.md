@@ -5,7 +5,7 @@ This is a simple FastAPI application that manages a list of items and provides a
 ## API Endpoints
 
 - `GET /`: Serves the frontend application.
-- `GET /api`: Returns a welcome message: `{"message": "Welcome vibedoctor !"}`.
+- `GET /api`: Returns a welcome message: `{"message": "Hello vibedoctor !"}`.
 - `GET /items`: Returns a list of items.
 - `POST /items`: Adds a new item.
 - `DELETE /items/{item_id}`: Deletes an item.
