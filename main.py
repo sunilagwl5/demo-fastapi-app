@@ -72,7 +72,11 @@ async def delete_item(item_id: int):
 # Health check endpoint for loadbalancer
 @app.get("/health")
 async def health_check():
-    return {"status": "ok"}
+    try:
+        redis_client.ping()
+        return {"status": "ok", "redis": "connected"}
+    except redis.ConnectionError:
+        raise HTTPException(status_code=503, detail="Redis unavailable")
 
 if __name__ == "__main__":
     import uvicorn
