@@ -1,4 +1,6 @@
 import os
+import json
+import redis
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -22,9 +24,18 @@ class Item(BaseModel):
     name: str
     description: Optional[str] = None
 
-# -- In-memory Database --
-items: List[Item] = []
-current_id = 0
+# -- Redis Connection --
+def get_redis_client():
+    redis_url = os.environ.get("REDIS_URL")
+    if redis_url:
+        return redis.from_url(redis_url, decode_responses=True)
+    host = os.environ.get("REDISHOST", "localhost")
+    port = int(os.environ.get("REDISPORT", 6379))
+    user = os.environ.get("REDISUSER", None)
+    password = os.environ.get("REDISPASSWORD", None)
+    return redis.Redis(host=host, port=port, username=user, password=password, decode_responses=True)
+
+redis_client = get_redis_client()
 
 @app.get("/")
 async def read_index():
