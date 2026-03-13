@@ -1,4 +1,6 @@
 import os
+import json
+import redis
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -22,9 +24,18 @@ class Item(BaseModel):
     name: str
     description: Optional[str] = None
 
-# -- In-memory Database --
-items: List[Item] = []
-current_id = 0
+# -- Redis Connection --
+def get_redis_client():
+    redis_url = os.environ.get("REDIS_URL")
+    if redis_url:
+        return redis.from_url(redis_url, decode_responses=True)
+    host = os.environ.get("REDISHOST", "localhost")
+    port = int(os.environ.get("REDISPORT", 6379))
+    user = os.environ.get("REDISUSER", None)
+    password = os.environ.get("REDISPASSWORD", None)
+    return redis.Redis(host=host, port=port, username=user, password=password, decode_responses=True)
+
+redis_client = get_redis_client()
 
 @app.get("/")
 async def read_index():
@@ -38,26 +49,34 @@ async def read_root():
 
 @app.get("/items", response_model=List[Item])
 async def get_items():
-    return items
+    keys = redis_client.keys("item:*")
+    result = []
+    for key in keys:
+        data = redis_client.get(key)
+        if data:
+            result.append(Item(**json.loads(data)))
+    result.sort(key=lambda x: x.id)
+    return result
 
 @app.post("/items", response_model=Item)
 async def create_item(item: Item):
-    global current_id
-    current_id += 1
-    item.id = current_id
-    items.append(item)
+    item.id = redis_client.incr("item_id_counter")
+    redis_client.set(f"item:{item.id}", json.dumps(item.model_dump()))
     return item
 
 @app.delete("/items/{item_id}")
 async def delete_item(item_id: int):
-    global items
-    items = [item for item in items if item.id != item_id]
+    redis_client.delete(f"item:{item_id}")
     return {"status": "deleted", "id": item_id}
 
 # Health check endpoint for loadbalancer
 @app.get("/health")
 async def health_check():
-    return {"status": "ok"}
+    try:
+        redis_client.ping()
+        return {"status": "ok", "redis": "connected"}
+    except redis.ConnectionError:
+        raise HTTPException(status_code=503, detail="Redis unavailable")
 
 if __name__ == "__main__":
     import uvicorn
